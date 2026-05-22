@@ -1,66 +1,110 @@
 import streamlit as st
-from groq import Groq
+import google.generativeai as genai
+from PIL import Image
 
-st.set_page_config(
-    page_title="Etsy AI SEO Generator",
-    page_icon="🛍️"
+st.set_page_config(page_title="Etsy Image SEO Generator", page_icon="🛍️")
+
+st.title("🛍️ Etsy Image SEO Generator")
+st.write("Upload a design image and generate Etsy title, tags, and description.")
+
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+
+uploaded_image = st.file_uploader(
+    "Upload your design image",
+    type=["png", "jpg", "jpeg", "webp"]
 )
 
-st.title("🛍️ Etsy AI SEO Generator")
-st.write("Generate Etsy SEO titles, tags, and descriptions using AI.")
+product_type = st.selectbox(
+    "Select product type",
+    [
+        "T-Shirt",
+        "Sweatshirt",
+        "Hoodie",
+        "Mug",
+        "Poster",
+        "Digital Pet Portrait",
+        "Sticker",
+        "Planner",
+        "Other"
+    ]
+)
 
-product_name = st.text_input("Enter your Etsy product idea")
+extra_info = st.text_input(
+    "Extra details optional",
+    placeholder="Example: dog mom, floral style, personalized gift"
+)
 
-if st.button("Generate SEO"):
+if uploaded_image:
+    image = Image.open(uploaded_image)
+    st.image(image, caption="Uploaded Design", use_container_width=True)
 
-    if not product_name.strip():
-        st.warning("Please enter a product idea.")
-
+if st.button("Generate Etsy SEO"):
+    if not uploaded_image:
+        st.warning("Please upload a design image first.")
     else:
+        with st.spinner("Analyzing image and generating Etsy SEO..."):
 
-        prompt = f"""
-You are an Etsy SEO expert specialized in Etsy US Print-on-Demand products.
+            prompt = f"""
+You are an Etsy SEO expert for US buyers.
 
-Generate SEO content for this product:
+Analyze this uploaded product design image carefully.
 
-{product_name}
+Product type:
+{product_type}
 
-Need output:
+Extra details:
+{extra_info}
 
-1. Etsy Title
-- Between 120 to 140 characters
-- High converting
-- SEO optimized
-- No trademark words
+First identify:
+- Main object/design
+- Text visible in design if any
+- Style
+- Color theme
+- Target buyer
+- Best Etsy niche
 
-2. Etsy Tags
-- Give exactly 13 tags
-- Each tag under 20 characters
+Then generate Etsy SEO content.
 
-3. Product Description
-- Attractive
-- Buyer focused
-- Easy to read
-- Good conversion style
+Output format:
+
+1. Image Analysis:
+Explain what the design shows in simple words.
+
+2. Etsy Titles:
+Give 5 SEO optimized Etsy titles.
+Each title must be 120 to 140 characters.
+Avoid trademark, brand, celebrity, movie, cartoon, sports team, or copyrighted words.
+
+3. Etsy Tags:
+Give exactly 13 Etsy tags.
+Each tag must be under 20 characters.
+Use US Etsy buyer keywords.
+
+4. Product Description:
+Write a high-converting Etsy description.
+Make it attractive and buyer-focused.
+
+5. Thumbnail Idea:
+Give one strong thumbnail image idea for this listing.
+
+Rules:
+- No keyword stuffing
+- No false claims
+- No copyrighted words
+- No digital terms if product is physical
+- If product is digital, clearly mention digital file only
 """
 
-        with st.spinner("Generating SEO content..."):
+            model = genai.GenerativeModel("gemini-1.5-flash")
 
-            client = Groq(
-                api_key=st.secrets["GROQ_API_KEY"]
+            response = model.generate_content([prompt, image])
+
+            st.subheader("Generated Etsy SEO")
+            st.write(response.text)
+
+            st.download_button(
+                label="Download SEO Result",
+                data=response.text,
+                file_name="etsy_seo_result.txt",
+                mime="text/plain"
             )
-
-            chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                model="llama-3.1-8b-instant"
-            )
-
-            result = chat_completion.choices[0].message.content
-
-            st.subheader("Generated SEO Content")
-            st.write(result)
