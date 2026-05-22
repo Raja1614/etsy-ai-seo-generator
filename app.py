@@ -2,109 +2,120 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-st.set_page_config(page_title="Etsy Image SEO Generator", page_icon="🛍️")
+st.set_page_config(
+    page_title="Etsy Image SEO Generator",
+    page_icon="🛍️"
+)
 
 st.title("🛍️ Etsy Image SEO Generator")
-st.write("Upload a design image and generate Etsy title, tags, and description.")
+st.write("Upload your design image and generate Etsy SEO instantly.")
 
+# Gemini API Key
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
+# Upload image
 uploaded_image = st.file_uploader(
-    "Upload your design image",
+    "Upload Design Image",
     type=["png", "jpg", "jpeg", "webp"]
 )
 
+# Product type
 product_type = st.selectbox(
-    "Select product type",
+    "Select Product Type",
     [
         "T-Shirt",
         "Sweatshirt",
         "Hoodie",
-        "Mug",
         "Poster",
-        "Digital Pet Portrait",
+        "Mug",
         "Sticker",
+        "Digital Pet Portrait",
         "Planner",
         "Other"
     ]
 )
 
+# Optional details
 extra_info = st.text_input(
-    "Extra details optional",
-    placeholder="Example: dog mom, floral style, personalized gift"
+    "Extra Details (Optional)",
+    placeholder="Example: dog mom floral style personalized gift"
 )
 
+# Show uploaded image
 if uploaded_image:
     image = Image.open(uploaded_image)
     st.image(image, caption="Uploaded Design", use_container_width=True)
 
+# Generate button
 if st.button("Generate Etsy SEO"):
+
     if not uploaded_image:
-        st.warning("Please upload a design image first.")
+        st.warning("Please upload an image first.")
+
     else:
-        with st.spinner("Analyzing image and generating Etsy SEO..."):
+
+        with st.spinner("Analyzing image and generating SEO..."):
 
             prompt = f"""
-You are an Etsy SEO expert for US buyers.
+You are an Etsy SEO expert specialized in Etsy US market.
 
-Analyze this uploaded product design image carefully.
+Analyze the uploaded design image carefully.
 
-Product type:
+Product Type:
 {product_type}
 
-Extra details:
+Extra Details:
 {extra_info}
 
-First identify:
-- Main object/design
-- Text visible in design if any
-- Style
-- Color theme
-- Target buyer
-- Best Etsy niche
+First understand:
+- design style
+- visible text
+- target audience
+- color theme
+- niche
+- emotional appeal
 
-Then generate Etsy SEO content.
+Then generate:
 
-Output format:
+1. Image Analysis
+Explain what the image/design contains.
 
-1. Image Analysis:
-Explain what the design shows in simple words.
+2. Etsy Titles
+Generate 5 high-converting Etsy titles.
+Each title should be 120-140 characters.
 
-2. Etsy Titles:
-Give 5 SEO optimized Etsy titles.
-Each title must be 120 to 140 characters.
-Avoid trademark, brand, celebrity, movie, cartoon, sports team, or copyrighted words.
-
-3. Etsy Tags:
-Give exactly 13 Etsy tags.
+3. Etsy Tags
+Generate exactly 13 Etsy tags.
 Each tag must be under 20 characters.
-Use US Etsy buyer keywords.
 
-4. Product Description:
-Write a high-converting Etsy description.
-Make it attractive and buyer-focused.
+4. Product Description
+Write an attractive Etsy description.
 
-5. Thumbnail Idea:
-Give one strong thumbnail image idea for this listing.
+5. Thumbnail Idea
+Suggest one high-converting thumbnail idea.
 
 Rules:
+- No trademark words
+- No copyrighted content
 - No keyword stuffing
-- No false claims
-- No copyrighted words
-- No digital terms if product is physical
-- If product is digital, clearly mention digital file only
+- Use buyer-focused SEO keywords
 """
 
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.0-flash")
 
-            response = model.generate_content([prompt, image])
+            response = model.generate_content(
+                [prompt, image]
+            )
+
+            result = response.text
 
             st.subheader("Generated Etsy SEO")
-            st.write(response.text)
+            st.write(result)
 
+            # Download button
             st.download_button(
                 label="Download SEO Result",
-                data=response.text,
+                data=result,
                 file_name="etsy_seo_result.txt",
                 mime="text/plain"
             )
