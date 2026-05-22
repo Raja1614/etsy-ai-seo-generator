@@ -1,55 +1,66 @@
 import streamlit as st
 from groq import Groq
 
-st.set_page_config(page_title="Etsy AI SEO Generator", page_icon="🛍️")
+st.set_page_config(
+    page_title="Etsy AI SEO Generator",
+    page_icon="🛍️"
+)
 
 st.title("🛍️ Etsy AI SEO Generator")
-st.write("Generate Etsy titles, tags, and descriptions using AI.")
+st.write("Generate Etsy SEO titles, tags, and descriptions using AI.")
 
-product_name = st.text_input("Enter your product name or idea")
+product_name = st.text_input("Enter your Etsy product idea")
 
 if st.button("Generate SEO"):
-    if not product_name.strip():
-        st.warning("Please enter a product name.")
-    else:
-        prompt = f"""
-You are an Etsy SEO expert specialized in US Print-on-Demand listings.
 
-Product idea:
+    if not product_name.strip():
+        st.warning("Please enter a product idea.")
+
+    else:
+
+        prompt = f"""
+You are an Etsy SEO expert specialized in Etsy US Print-on-Demand products.
+
+Generate SEO content for this product:
+
 {product_name}
 
-Create:
+Need output:
 
 1. Etsy Title
-- 120 to 140 characters
+- Between 120 to 140 characters
+- High converting
 - SEO optimized
-- Buyer-focused
-- No trademark/copyright words
+- No trademark words
 
 2. Etsy Tags
-- 13 tags
+- Give exactly 13 tags
 - Each tag under 20 characters
-- Etsy US buyer intent keywords
 
-3. Description
-- Attractive Etsy product description
-- Clear benefits
-- Good for conversion
-- No keyword stuffing
+3. Product Description
+- Attractive
+- Buyer focused
+- Easy to read
+- Good conversion style
 """
 
         with st.spinner("Generating SEO content..."):
-            client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+            client = Groq(
+                api_key=st.secrets["GROQ_API_KEY"]
+            )
 
             chat_completion = client.chat.completions.create(
                 messages=[
                     {
                         "role": "user",
-                        "content": prompt,
+                        "content": prompt
                     }
                 ],
-                model="llama3-8b-8192",
+                model="llama-3.1-8b-instant"
             )
 
             result = chat_completion.choices[0].message.content
+
+            st.subheader("Generated SEO Content")
             st.write(result)
